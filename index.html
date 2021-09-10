@@ -86,8 +86,12 @@
 		<span class="text-muted">&copy; 2019 - <a href="https://gzalo.com">Gzalo.com</a></span>
 	  </div>
 	</footer>
-
 </div>
+	
+<div class="fontcache" style="font-family:Rawline;color:white;font-weight:normal;">0</div>
+<div class="fontcache" style="font-family:Rawline;color:white;font-weight:bold;">0</div>
+<div class="fontcache" style="font-family:Rawline;color:white;font-weight:bolder;">0</div>
+<div class="fontcache" style="font-family:Rawline;color:white;font-weight:lighter;">0</div>
 
 <script>
 	canvasToBlob = function(canvas) {
@@ -199,45 +203,48 @@
 		
 	}
 	
-	var app = new Vue({
-		el: '#app',
-		data: {
-			charList: ['0','1','2','3','4','5','6','7','8','9','-','.'],
-			fontList: ["Arial", "Times New Roman", "Rawline"],
-			fontSelected: "Rawline",
-			fontSize: "24",
-			fontVariantSelected: "normal",
-			fontVariantList: ["normal","bold","bolder","lighter"], 
-			colorBg: '#e2effe',
-			colorFg: '#2e8518',
-			imageWidth: '32',
-			imageHeight: '32'
-		},
-		methods:{
-			save: function(){
-				
-				var savedNames = [];
-				var itemCount = this.charList.length;
-				
-				for(i=0;i<this.charList.length;i++){						
-					var name = this.charList[i];
-					if(name == '-') name = 'a';
-					if(name == '.') name = 'b';
-					savedNames.push(name + "_" + this.fontSelected + "_" + this.fontSize + ".png");
+	function createApp(){
+		var app = new Vue({
+			el: '#app',
+			data: {
+				charList: ['0','1','2','3','4','5','6','7','8','9','-','.'],
+				fontList: ["Arial", "Times New Roman", "Rawline"],
+				fontSelected: "Rawline",
+				fontSize: "24",
+				fontVariantSelected: "normal",
+				fontVariantList: ["normal","bold","bolder","lighter"], 
+				colorBg: '#e2effe',
+				colorFg: '#2e8518',
+				imageWidth: '32',
+				imageHeight: '32'
+			},
+			methods:{
+				save: function(){
+					
+					var savedNames = [];
+					var itemCount = this.charList.length;
+					
+					for(i=0;i<this.charList.length;i++){						
+						var name = this.charList[i];
+						if(name == '-') name = 'a';
+						if(name == '.') name = 'b';
+						savedNames.push(name + "_" + this.fontSelected + "_" + this.fontSize + ".png");
+					}
+					
+					var i = 0;
+					setTimeout(function run() {
+						saveCanvas(i, savedNames[i]);
+						i++;
+						if(i == itemCount) return;
+						setTimeout(run, 100);
+					}, 100);
+					
 				}
-				
-				var i = 0;
-				setTimeout(function run() {
-					saveCanvas(i, savedNames[i]);
-					i++;
-					if(i == itemCount) return;
-					setTimeout(run, 100);
-				}, 100);
-				
-			}
-		},
+			},
 
-	});
+		});
+	}
+	setTimeout(createApp, 200);
 </script>
 </body>
 </html>
