@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Generador de íconos numéricos</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="FileSaver.min.js"></script>
+	<!--https://fastcdn.org/FileSaver.js/1.1.20151003/-->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link href="https://cdn.rawgit.com/h-ibaldo/Raleway_Fixed_Numerals/master/css/rawline.css" rel="stylesheet"> 
+
+    <style> 
+	[v-cloak] { display: none; }
+
+    .font-box {
+		margin-right: 1px;
+		display: inline-block;
+
+	}
+	.font-box canvas{
+		border: 1px solid #000;
+	}
+	.container{
+		margin-top:15px;
+	}
+	.container h1{
+		font-size:35px;
+	}
+	.footer {
+		font-size:12px;
+	}
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+	<div class="container">
+		<div class="row">
+			<div class="col-12"><h1>Generador de iconos numéricos</h1></div>
+		
+			<div class="col-12">
+				Previsualización:<br/>
+				<!--SVG drawing<br/>
+				<svg width="32" height="32" class="font-box" v-for="(char,key) in charList" :id="'svg' + key">
+					<rect width="100%" height="100%" :fill="colorBg"></rect>
+					  <text x="0" :y="fontSize/2" :fill="colorFg" :font-size="fontSize" :font-family="fontSelected" dominant-baseline="central">{{char}}</text>
+				</svg>-->
+				
+				
+			    <my-canvas v-for="(char,key) in charList" :key="key" :id="'canvas' + key" class="font-box" :width="imageWidth" :height="imageHeight">
+					<my-text :text="char" :fontsize="fontSize" :colorbg="colorBg" :colorfg="colorFg" :fontfamily="fontSelected" :fontvariant="fontVariantSelected"></my-text>
+				</my-canvas>
+				<hr/>
+			</div>
+			
+			<div class="col-12">
+				
+				<div class="form-group">
+					Tipografía
+					<div class="row">
+						<div class="col-9">
+							<select v-model="fontSelected" class="form-control" >
+								<option v-for="font in fontList" :value="font">{{font}}</option>
+							</select>
+						</div>
+						<div class="col-3">
+							<select v-model="fontVariantSelected" class="form-control" >
+								<option v-for="variant in fontVariantList" :value="variant">{{variant}}</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			
+				<div class="form-group">Tamaño de texto: {{fontSize}} <input type="range" v-model="fontSize" min="6" max="80" class="form-control-range"></div>
+				<div class="form-group">Tamaño de imagen: {{ imageWidth + 'x' + imageHeight}} <input type="range" v-model="imageWidth" min="8" max="64" class="form-control-range"> <input type="range" v-model="imageHeight" min="8" max="64" class="form-control-range"> </div>
+				
+				<div class="form-group"><label for="colorBg">Color de fondo</label> <input id="colorBg" type="color" v-model="colorBg"> <input type="text" v-model="colorBg" class="form-control"></div>
+				<div class="form-group"><label for="colorBg">Color del texto</label> <input id="colorFg" type="color" v-model="colorFg">  <input type="text" v-model="colorFg" class="form-control"></div>
+
+				<p><button @click="save" class="btn btn-primary">Guardar imágenes</button></p>
+			</div>
+		</div>
+				
+	</div>
+	<footer class="footer">
+	  <div class="container">
+		<span class="text-muted">&copy; 2019 - <a href="https://gzalo.com">Gzalo.com</a></span>
+	  </div>
+	</footer>
+
+</div>
+
+<script>
+	canvasToBlob = function(canvas) {
+		return new Promise(function(resolve) {
+			canvas.toBlob(function(blob) {
+				return resolve(blob);
+			}, 'image/png');
+		});
+	}
+
+	Vue.component('my-canvas',{
+		template: '<div class="my-canvas-wrapper"><canvas ref="my-canvas"></canvas><slot></slot></div>',
+		props: {
+			width:{
+				type: String,
+				default: '32'
+			},
+			height:{
+				type: String,
+				default: '32'
+			},
+		},
+		data: function(){
+			return {provider:{context:null, width: '32', height: '32'}};
+		},
+		provide: function(){
+			return {provider:this.provider};
+		},
+		watch: {
+			'width': {
+				handler: function (val, oldVal) { 
+					this.provider.width = val;
+					this.$refs['my-canvas'].width = val;
+				}
+			},
+			'height': {
+				handler: function (val, oldVal) { 
+					this.provider.height = val;
+					this.$refs['my-canvas'].height = val;
+				}
+			}
+		},
+		mounted: function(){	
+			this.provider.context = this.$refs['my-canvas'].getContext('2d', {alpha: false});
+			this.$refs['my-canvas'].width = this.width;
+			this.$refs['my-canvas'].height = this.height;
+			this.provider.width = this.width;
+			this.provider.height = this.height;
+		}
+	});
+	
+	Vue.component('my-text', {
+		inject: ['provider'],
+		props: {
+			text:{
+				type: String,
+				default: ''
+			},
+			fontsize:{
+				type: String,
+				default: '8'
+			},
+			fontfamily:{
+				type: String,
+				default: 'Arial'
+			},			
+			fontvariant:{
+				type: String,
+				default: 'normal'
+			},		
+			colorbg:{
+				type: String,
+				default: 'white'
+			},
+			colorfg:{
+				type: String,
+				default: 'black'
+			},						
+		},
+		render: function(){
+			if(!this.provider.context) return;
+			const ctx = this.provider.context;
+			
+			//ctx.globalCompositeOperation = 'source-over';
+			ctx.fillStyle = this.colorbg;
+			ctx.fillRect(0, 0, this.provider.width, this.provider.height);
+			
+			//ctx.translate(0.5, 0.5);
+			ctx.fillStyle = this.colorfg;
+			ctx.textAlign = "center"; 
+			ctx.textBaseline = "middle"; 
+			//ctx.globalCompositeOperation = 'copy';
+
+			
+			ctx.font = this.fontvariant + " " + this.fontsize + "px " + this.fontfamily;
+			ctx.fillText(this.text, this.provider.width/2, this.provider.height/2);
+		
+		}
+		
+	});
+
+	function saveCanvas(idx, name){
+		console.log("Saving",name);
+		var canvas = document.querySelector("#canvas"+idx+" canvas");
+								
+		var blob = canvas.toBlob(function(blob){
+			saveAs(blob, name);  
+		}, 'image/png');
+		
+	}
+	
+	var app = new Vue({
+		el: '#app',
+		data: {
+			charList: ['0','1','2','3','4','5','6','7','8','9','-','.'],
+			fontList: ["Arial", "Times New Roman", "Rawline"],
+			fontSelected: "Rawline",
+			fontSize: "24",
+			fontVariantSelected: "normal",
+			fontVariantList: ["normal","bold","bolder","lighter"], 
+			colorBg: '#e2effe',
+			colorFg: '#2e8518',
+			imageWidth: '32',
+			imageHeight: '32'
+		},
+		methods:{
+			save: function(){
+				
+				var savedNames = [];
+				var itemCount = this.charList.length;
+				
+				for(i=0;i<this.charList.length;i++){						
+					var name = this.charList[i];
+					if(name == '-') name = 'a';
+					if(name == '.') name = 'b';
+					savedNames.push(name + "_" + this.fontSelected + "_" + this.fontSize + ".png");
+				}
+				
+				var i = 0;
+				setTimeout(function run() {
+					saveCanvas(i, savedNames[i]);
+					i++;
+					if(i == itemCount) return;
+					setTimeout(run, 100);
+				}, 100);
+				
+			}
+		},
+
+	});
+</script>
+</body>
+</html>
